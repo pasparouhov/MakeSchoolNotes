@@ -7,7 +7,7 @@
 //
 
 import UIKit
-
+import RealmSwift
 class DisplayNoteViewController: UIViewController {
     var note: Note?
     @IBOutlet weak var noteTitleTextField: UITextField!
@@ -16,23 +16,26 @@ class DisplayNoteViewController: UIViewController {
     super.viewDidLoad()
   }
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if let identifier = segue.identifier {
-            if identifier == "Cancel" {
-                print("Cancel button tapped")
-            } else if identifier == "Save" {
-                print("Save button tapped")
-                
+        let listNotesTableViewController = segue.destinationViewController as! ListNotesTableViewController
+        if segue.identifier == "Save" {
+            // if note exists, update title and content
+            if let note = note {
+                // 1
+                let newNote = Note()
+                newNote.title = noteTitleTextField.text ?? ""
+                newNote.content = noteContentTextView.text ?? ""
+                RealmHelper.updateNote(note, newNote: newNote)
+            } else {
+                // if note does not exist, create new note
                 let note = Note()
                 note.title = noteTitleTextField.text ?? ""
-                note.content = noteContentTextView.text
-                // 3
+                note.content = noteContentTextView.text ?? ""
                 note.modificationTime = NSDate()
-                // 1
-                let listNotesTableViewController = segue.destinationViewController as! ListNotesTableViewController
                 // 2
-                listNotesTableViewController.notes.append(note)
-                
+                RealmHelper.addNote(note)
             }
+            // 3
+            listNotesTableViewController.notes = RealmHelper.retrieveNotes()
         }
     }
     override func viewWillAppear(animated: Bool) {
